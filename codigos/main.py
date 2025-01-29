@@ -21,6 +21,9 @@ class MyClient(discord.Client):
         elif message.content == '!pong':
             await message.channel.send('Escreveu errado, minha gatinha!')
 
+        elif message.content == '!avatar':
+            embed = discord.Embed(title=f"Avatar de @{message.author.name}")
+
 # Na variável "permissões" são colocadas as permissões, que precisam ser ativadas como acontece abaixo
 permissoes = discord.Intents.default()
 permissoes.messages = True
