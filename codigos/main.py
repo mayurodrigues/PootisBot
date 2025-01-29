@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 CHANNEL_ID = 1333909539820666934
 
 permissoes = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents = permissoes)
+permissoes.messages = True
+bot = commands.Bot(command_prefix="!", intents=permissoes)
 
 @bot.event
 async def on_ready():
