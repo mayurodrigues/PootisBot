@@ -32,6 +32,22 @@ async def on_message(message):
     # Processa os comandos a partir das mensagens
     await bot.process_commands(message)
 
+# Tratamento de erros
+@bot.event
+async def on_command_error(ctx, error):
+    # Verifica a tentativa de executar um comando inexistente ou digitado incorretamente
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send('Comando incorreto ou inexistente. Use "!ajuda" para uma lista dos comandos ou verifique sua mensagem.')
+    # Verifica a tentativa de executar um comando com um argumento inválido
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send('Um argumento inválido foi utilizado na execução desse comando. Use "!ajuda" para entender a sintaxe ou verifique sua mensagem.')
+    elif isinstance(error, commands.MissingRequiredArgument):
+    # Verifica a tentativa de executar um comando sem um argumento necessário
+        await ctx.send('Faltam argumentos necessários para a execução desse comando. Use "!ajuda" para entender a sintaxe ou verifique sua mensagem.')
+    # Verifica a tentativa de execução de um comando por um usuário sem permissões para executá-lo
+    elif isinstance(error, commands.MissingPermissions):
+        await ctx.send('Você não tem permissão para executar esse comando.')
+
 # Comando: bot diz "Fala!" para quem executou o comando
 @bot.command()
 async def ola(ctx):
@@ -46,9 +62,6 @@ async def ping(ctx):
 @bot.command()
 async def pong(ctx):
     await ctx.send(f'Escreveu errado, minha gatinha!')
-
-# Parte do comando futuro para mostrar a foto de perfil
-#   embed = discord.Embed(title=f"Avatar de @{message.author.name}")
 
 # Carrega as variáveis de ambiente do .env
 load_dotenv()
