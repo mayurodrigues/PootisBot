@@ -1,36 +1,57 @@
 import os
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
-class MyClient(discord.Client):
-    async def on_ready(self):
-        print(f'Iniciado como {self.user}!')
+# Configura as permissões do bot
+INTENTS = discord.Intents.default()
+INTENTS.messages = True
+INTENTS.message_content = True
+INTENTS.members = True
+INTENTS.guilds = True
 
-    async def on_message(self, message):
-         # Ignorar mensagens do próprio bot
-        if message.author == self.user:
-            return
+# Configura o bot com o prefixo e as permissões
+bot = commands.Bot(command_prefix='!', intents=INTENTS)
 
-        print(f'Mensagem de {message.author}: {message.content}')
-        if message.content == '!ola':
-            await message.channel.send(f'Fala, {message.author.name}!')
+# Evento: mensagem no terminal quando o bot estiver pronto
+@bot.event
+async def on_ready():
+    # Lista os bots ativos mostrando em que servidores estão e seus nomes de usuário dentro deles
+    for guild in bot.guilds:
+        print(f'Iniciado como {bot.user} no servidor {guild.name}!')
 
-        elif message.content == '!ping':
-            await message.channel.send(f'Pong! Aqui está seu ping: {round(client.latency * 1000)}ms.')
+# Histórico de mensagens no servidor no terminal
+@bot.event
+async def on_message(message):
+    print(f'Mensagem de {message.author}: {message.content}')
 
-        elif message.content == '!pong':
-            await message.channel.send('Escreveu errado, minha gatinha!')
+    # Garante que o bot não responda a si
+    if message.author == bot.user:
+        return
 
-        elif message.content == '!avatar':
-            embed = discord.Embed(title=f"Avatar de @{message.author.name}")
+    # Processa os comandos a partir das mensagens
+    await bot.process_commands(message)
 
-# Na variável "permissões" são colocadas as permissões, que precisam ser ativadas como acontece abaixo
-permissoes = discord.Intents.default()
-permissoes.messages = True
-permissoes.message_content = True
+# Comando: bot diz "Fala!" para quem executou o comando
+@bot.command()
+async def ola(ctx):
+    await ctx.send(f'Fala, {ctx.author.name}!')
 
-# Criando um client
-client = MyClient(intents=permissoes)
+# Comando: bot responde seu tempo de resposta para quem executou o comando
+@bot.command()
+async def ping(ctx):
+    await ctx.send(f'Pong! Aqui está seu ping: {round(bot.latency * 1000)}ms')
 
+# Comando: bot responde uma brincadeira com quem digitou "!pong" ao invés de "!ping"
+@bot.command()
+async def pong(ctx):
+    await ctx.send(f'Escreveu errado, minha gatinha!')
+
+# Parte do comando futuro para mostrar a foto de perfil
+#   embed = discord.Embed(title=f"Avatar de @{message.author.name}")
+
+# Carrega as variáveis de ambiente do .env
 load_dotenv()
-client.run(os.getenv('TOKEN'))
+
+# Inicia o bot com o token gravado no .env
+bot.run(os.getenv('TOKEN'))
