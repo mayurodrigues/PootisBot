@@ -1,6 +1,8 @@
 import os
 import logging
 import discord
+import yt_dlp
+import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 from erros import MENSAGENS_DE_ERRO  # Importa o dicionário de erros no arquivo separado
@@ -69,5 +71,21 @@ async def ping(ctx):
 @bot.command()
 async def pong(ctx):
     await ctx.reply(f'Escreveu errado, minha gatinha!')
+
+# Comando: bot entra no canal de voz
+@bot.command()
+async def entrar(ctx):
+    if ctx.author.voice:
+        await ctx.author.voice.channel.connect()
+    else:
+        await ctx.reply("Antes de executar o comando, você deve estar no canal de voz em que devo entrar!")
+
+# Comando: bot sai do canal de voz
+@bot.command()
+async def sair(ctx):
+    if ctx.voice_client:
+        await ctx.voice_client.disconnect()
+    else:
+        await ctx.reply("Não estou em um canal de voz!")
 
 bot.run(os.getenv('TOKEN')) # Inicia o bot com o token gravado no .env
