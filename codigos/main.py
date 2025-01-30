@@ -2,6 +2,8 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
+import io
 
 # Configura as permissões do bot
 INTENTS = discord.Intents.default()
@@ -46,6 +48,65 @@ async def ping(ctx):
 @bot.command()
 async def pong(ctx):
     await ctx.send(f'Escreveu errado, minha gatinha!')
+
+# Comando: bot responde com a imagem e texto que o usuário enviou
+@bot.command()
+async def tt(ctx, *, text: str):
+    if not ctx.message.attachments:
+        await ctx.send("Anexe um arquivo!")
+        return
+    
+    attachment = ctx.message.attachments[0]
+    if not attachment.filename.lower().endswitch(('png', 'jpg', 'jpeg', 'gif', 'bmp')):
+        await ctx.send("Por favor, anexe um arquivo válido!")
+        return
+    
+    text_position = (10, 10)
+    output, format = await processaImagem(attachment, text, text_position)
+
+    if format == "gif":
+        await ctx.send(file=discord.File(fp=output, filename='image_with_top_text.gif'))
+    else:
+        await ctx.send(file=discord.File(fp=output, filename='image_with_top_text.png'))
+        
+async def textoImagem(image, text, position):
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
+    text_color = (255, 255, 255)
+    draw.text(position, text, font=font, fill=text_color)
+    return image
+
+async def processaImagem(attachment, text, position):
+    image_bytes = await attachment.read()
+    image = Image.open(io.BytesIO(image_bytes))
+
+    if getattr(image, "é animado", False):
+        frames = []
+        for frame in ImageSequence.Iterator(image):
+            frame = frame.convert("RGBA")
+            frame = await textoImagem(frame, text, position)
+            frames.append(frame)
+
+            with io.BytesIO() as gif_binary:
+                frames[0].save(
+                gif_binary,
+                format="GIF",
+                save_all=True,
+                append_images=frames[1:],
+                loop=0,  # Loop infinito
+                duration=image.info["duration"] 
+            )
+            gif_binary.seek(0)
+            return gif_binary, "gif"
+    
+    else:
+        image = await textoImagem(image.convert("RGBA"), text, position)
+        with io.BytesIO() as image_binary:
+            image.save(image_binary, format="PNG")
+        image_binary.seek(0)
+        return image_binary, "png"
+    
+
 
 # Parte do comando futuro para mostrar a foto de perfil
 #   embed = discord.Embed(title=f"Avatar de @{message.author.name}")
