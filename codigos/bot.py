@@ -2,7 +2,7 @@ import discord
 import logging
 from discord.ext import commands
 from erros import MENSAGENS_DE_ERRO  # Importa o dicionário de erros no arquivo separado
-from comandos_simples import comandos_simples  # Importa comandos simples
+from simples import comandos_simples  # Importa comandos simples
 from musica import comandos_musica  # Importa comandos de música
 
 # Configura o logging de erros
