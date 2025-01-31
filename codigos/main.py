@@ -10,7 +10,7 @@ from erros import MENSAGENS_DE_ERRO  # Importa o dicionário de erros no arquivo
 # Configura o logging de erros
 logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
-load_dotenv() # Carrega as variáveis de ambiente do .env
+load_dotenv()  # Carrega as variáveis de ambiente do .env
 
 # Configura as permissões do bot
 INTENTS = discord.Intents.default()
@@ -19,13 +19,13 @@ INTENTS.message_content = True
 INTENTS.members = True
 INTENTS.guilds = True
 
-bot = commands.Bot(command_prefix='!', intents=INTENTS) # Configura o bot com o prefixo e as permissões
+bot = commands.Bot(command_prefix='!', intents=INTENTS)  # Configura o bot com o prefixo e as permissões
 
-filas = {}
+filas = {}  # Dicionário para armazenar as filas de reprodução de cada servidor
 
-@bot.event # Aviso no terminal quando o bot estiver pronto
+@bot.event  # Aviso no terminal quando o bot estiver pronto
 async def on_ready():
-    comandos_desativados = [] # Inserir nome do comando entre aspas e sem prefixo
+    comandos_desativados = []  # Inserir nome do comando entre aspas e sem prefixo
 
     for comando in comandos_desativados:
         comando = bot.get_command(comando)
@@ -36,7 +36,7 @@ async def on_ready():
     for guild in bot.guilds:
         print(f'Iniciado como {bot.user} no servidor {guild.name}!')
 
-@bot.event # Histórico de mensagens no servidor no terminal
+@bot.event  # Histórico de mensagens no servidor no terminal
 async def on_message(message):
     print(f'Mensagem de {message.author}: {message.content}')
 
@@ -47,7 +47,7 @@ async def on_message(message):
     # Processa os comandos a partir das mensagens
     await bot.process_commands(message)
 
-@bot.event # Tratamento de erros
+@bot.event  # Tratamento de erros
 async def on_command_error(ctx, error):
     tipo_de_erro = type(error)
     if tipo_de_erro in MENSAGENS_DE_ERRO:
@@ -56,8 +56,8 @@ async def on_command_error(ctx, error):
             message = message(error)
         await ctx.reply(message.format(ctx=ctx))
     else:
-        await ctx.reply("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.")
-        logging.error(f"Erro não tratado: {error}", exc_info=True)
+        await ctx.reply('Ocorreu um erro inesperado. Por favor, tente novamente mais tarde!')
+        logging.error(f'Erro não tratado: {error}', exc_info=True)
 
 # Comando: bot diz "Fala!" para quem executou o comando
 @bot.command()
@@ -67,42 +67,55 @@ async def ola(ctx):
 # Comando: bot responde seu tempo de resposta para quem executou o comando
 @bot.command()
 async def ping(ctx):
-    await ctx.reply(f'Pong! Aqui está seu ping: {round(bot.latency * 1000)}ms')
+    await ctx.reply(f'Pong! Aqui está seu ping: {round(bot.latency * 1000)}ms!')
 
 # Comando: bot responde uma brincadeira com quem digitou "!pong" ao invés de "!ping"
 @bot.command()
 async def pong(ctx):
-    await ctx.reply(f'Escreveu errado, minha gatinha!')
-
-# Comando: bot entra no canal de voz
-@bot.command()
-async def entrar(ctx):
-    if ctx.author.voice:
-        await ctx.author.voice.channel.connect()
-    else:
-        await ctx.reply("Antes de executar o comando, você deve estar no canal de voz em que devo entrar!")
-
-# Comando: bot sai do canal de voz
-@bot.command()
-async def sair(ctx):
-    if ctx.voice_client:
-        await ctx.voice_client.disconnect()
-        if ctx.guild.id in filas: # Verifica se havia uma fila para o servidor
-            filas[ctx.guild.id].clear() # Se houver, limpa a fila ao sair
-    else:
-        await ctx.reply("Não estou em um canal de voz!")
+    await ctx.reply('Escreveu errado, minha gatinha!')
 
 @bot.command()
-async def tocar(ctx, url):
+async def tocar(ctx, url: str):
+    # Função para começar a reprodução da próxima música na fila
+    async def comecar():
+        if not filas[ctx.guild.id]:  # Verifica se há músicas na fila
+            return
+
+        reproducao = filas[ctx.guild.id].pop(0)  # Remove a primeira música da fila
+
+        # Configurações do ffmpeg para reprodução de áudio
+        ffmpeg_options = {
+            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            'options': '-vn -filter:a "volume=0.5"'
+        }
+
+        source = discord.FFmpegOpusAudio(reproducao['url'], **ffmpeg_options)
+
+        # Função chamada após a reprodução terminar
+        def after_playing(e):
+            if e:
+                print(f'Erro ao tocar a música: {e}')
+            if filas[ctx.guild.id]:  # Se ainda houver músicas na fila, toca a próxima
+                asyncio.run_coroutine_threadsafe(comecar(), bot.loop)
+
+        ctx.voice_client.play(source, after=after_playing)
+        await ctx.send(f'Tocando agora: {reproducao["title"]}!')
+
+    # Verifica se o usuário está em um canal de voz
+    if not ctx.author.voice:
+        await ctx.reply('Você precisa estar em um canal de voz para tocar músicas!')
+        return
+
     # Entra no canal de voz caso o bot não esteja em um
     if not ctx.voice_client:
-        await entrar(ctx)
+        canal = ctx.author.voice.channel
+        await canal.connect()
 
     # Cria uma fila para o servidor caso ainda não exista
     if ctx.guild.id not in filas:
         filas[ctx.guild.id] = []
 
-    # Define as opções da biblioteca yt-dlp
+    # Define as opções do yt-dlp para extração de informações do vídeo
     ydl_opts = {
         'format': 'bestaudio/best',
         'noplaylist': True,
@@ -113,52 +126,120 @@ async def tocar(ctx, url):
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        loop = asyncio.get_event_loop()  # Permite que o bot funcione para outros comandos enquanto reproduz algo
+        try:
+            # Executa o yt-dlp em uma thread separada para não bloquear o loop de eventos
+            info = await asyncio.to_thread(ydl.extract_info, url, download=False)
 
-        # Armazena as informações do vídeo na variável info sem baixá-lo
-        info = await loop.run_in_executor(None, lambda: ydl.extract_info(url, download=False))
+            if 'url' not in info:
+                await ctx.reply('Erro ao obter o link! O vídeo pode estar privado ou indisponível!')
+                return
 
-        if 'url' not in info:
-            await ctx.reply("Erro ao obter o link! O vídeo pode estar privado ou indisponível.")
-            return
+            musica = {'url': info['url'], 'title': info['title']}
+            filas[ctx.guild.id].append(musica)  # Adiciona a música na fila
 
-        filas[ctx.guild.id].append({"url": info['url'], "title": info['title']}) # Adiciona o video à fila do servidor com título e utl
+            # Exibe a fila para depuração
+            print(f'Fila atual ({ctx.guild.id}):', filas[ctx.guild.id])
 
-        # Verifica se há mais de um item na fila antes de enviar a mensagem de adicionado
-        if ctx.voice_client.is_playing():
-            await ctx.reply(f"Adicionado à fila: {info['title']}")
-        else:
-            await comecar(ctx)
+            # Se não houver música tocando, inicia a reprodução
+            if not ctx.voice_client.is_playing() and not ctx.voice_client.is_paused():
+                await comecar()
+            else:
+                await ctx.reply(f'Adicionado à fila: {musica["title"]}!')
 
-# Função para começar a reprodução (não é um comando)
-async def comecar(ctx):
-    musica = filas[ctx.guild.id].pop(0)
-    ffmpeg_options = {'options': '-vn'} # Remove o vídeo e extrai apenas o áudio
+        except yt_dlp.utils.DownloadError as e:
+            await ctx.reply(f'Erro ao processar o link: {str(e)}!')
+        except Exception as e:
+            await ctx.reply('Erro ao processar o link! O vídeo pode estar indisponível ou não ser compatível!')
+            print(f'Erro ao extrair informações do vídeo: {e}')
+    print(filas)
 
-    # Converte o áudio para opus e cria um player (objeto) para tocá-lo no canal de audio
-    source = discord.FFmpegOpusAudio(musica['url'], **ffmpeg_options)
-    # Cria um player e toca o áudio no canal de voz
-    ctx.voice_client.play(source, after=lambda e: asyncio.run_coroutine_threadsafe(comecar(ctx), bot.loop))
-    await ctx.reply(f"Tocando agora: {musica['title']}")
-
+# Comando: pausar ou retomar a reprodução
 @bot.command()
 async def pausa(ctx):
-    if ctx.voice_client and ctx.voice_client.is_playing(): # Verifica se o usuário está num canal de voz e se algo está sendo reproduzido
-        ctx.voice_client.pause() # Pausa a reprodução
+    if ctx.voice_client and ctx.voice_client.is_playing():
+        ctx.voice_client.pause()  # Pausa a reprodução
         await ctx.reply('Reprodução pausada!')
-    elif ctx.voice_client and ctx.voice_client.is_paused(): # Verifica se o usuário está num canal de voz e se há uma reprodução pausada
-            ctx.voice_client.resume()
-            await ctx.reply('Reprodução retomada!') # Retoma a reprodução
+    elif ctx.voice_client and ctx.voice_client.is_paused():
+        ctx.voice_client.resume()  # Retoma a reprodução
+        await ctx.reply('Reprodução retomada!')
     else:
         await ctx.reply('Não há nada para pausar!')
 
-# Comando: limpar a fila de reprodução
-# @bot.command()
-# async def limpar(ctx):
-#     if ctx.guild.id in filas:
-#         filas[ctx.guild.id].clear()
-#         await ctx.reply("✅ Fila limpa!")
-#     else:
-#         await ctx.reply("❌ Não há fila para limpar!")
+# Comando: pular para o próximo item da fila de reprodução
+@bot.command()
+async def pular(ctx):
+    if ctx.voice_client and ctx.voice_client.is_playing():
+        ctx.voice_client.stop()  # Para a música atual, chamando o after para tocar a próxima
+        await ctx.reply('Música pulada!')
+    else:
+        await ctx.reply('Nenhuma música está sendo reproduzida no momento!')
 
-bot.run(os.getenv('TOKEN')) # Inicia o bot com o token gravado no .env
+# Comando: informa o que está sendo reproduzido
+@bot.command()
+async def agora(ctx):
+    if ctx.voice_client and ctx.voice_client.is_playing():
+        musica = filas[ctx.guild.id][0] if filas[ctx.guild.id] else None  # Verifica se há algo na fila
+        if musica:
+            embed = discord.Embed(
+                title='Tocando Agora:',
+                description=f'{musica["title"]}',
+                color=discord.Color.blue()
+            )
+            await ctx.reply(embed=embed)
+        else:
+            await ctx.reply('Nenhuma música está sendo reproduzida no momento!')
+    else:
+        await ctx.reply('Nenhuma música está sendo reproduzida no momento!')
+
+# Comando: exibir a fila atual
+@bot.command()
+async def fila(ctx):
+    if ctx.guild.id in filas and filas[ctx.guild.id]:
+        embed = discord.Embed(title='Fila de Reprodução:', color=discord.Color.blue())
+        for i, musica in enumerate(filas[ctx.guild.id], start=1):
+            embed.add_field(name=f'{i}. {musica["title"]}', value='\u200b', inline=False)
+        await ctx.reply(embed=embed)
+    else:
+        await ctx.reply('A fila está vazia!')
+
+# Comando: limpar a fila de reprodução
+@bot.command()
+async def limpar(ctx):
+    if ctx.guild.id in filas:
+        filas[ctx.guild.id].clear()
+        await ctx.reply('Fila limpa!')
+    else:
+        await ctx.reply('Não há fila para limpar!')
+
+# Comando: entrar no canal de voz
+@bot.command()
+async def entrar(ctx):
+    if ctx.author.voice:  # Verifica se o usuário está em um canal de voz
+        canal = ctx.author.voice.channel
+        if ctx.voice_client:
+            await ctx.voice_client.move_to(canal)  # Move o bot para o canal do usuário
+        else:
+            await canal.connect()  # Conecta o bot ao canal de voz
+        await ctx.reply(f'Entrei no canal de voz: {canal.name}!')
+    else:
+        await ctx.reply('Você precisa estar em um canal de voz para usar este comando!')
+
+# Comando: sair do canal de voz
+@bot.command()
+async def sair(ctx):
+    if ctx.voice_client:  # Verifica se o bot está conectado a um canal de voz
+        await ctx.voice_client.disconnect()  # Desconecta do canal de voz
+        await ctx.reply('Saí do canal de voz!')
+    else:
+        await ctx.reply('Não estou em um canal de voz!')
+
+# Comando: remover uma música específica da fila
+@bot.command()
+async def remover(ctx, posicao: int):
+    if ctx.guild.id in filas and 1 <= posicao <= len(filas[ctx.guild.id]):
+        musica_removida = filas[ctx.guild.id].pop(posicao - 1)
+        await ctx.reply(f'Removida da fila: {musica_removida["title"]}!')
+    else:
+        await ctx.reply('Posição inválida ou fila vazia!')
+
+bot.run(os.getenv('TOKEN'))  # Inicia o bot com o token gravado no .env
