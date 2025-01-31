@@ -15,7 +15,7 @@ def comandos_musica(bot):
                     ctx.author.voice.channel)  # Caso o bot esteja num canal de voz diferente, move para o do usuário
             else:
                 await ctx.author.voice.channel.connect()  # Conecta o bot ao canal de voz do usuário
-            await ctx.reply(f'Entrei no canal de voz: {ctx.author.voice.channel.name}!')
+            await ctx.reply(f'Entrei no canal de voz "{ctx.author.voice.channel.name}"!')
         else:
             await ctx.reply('Você precisa estar em um canal de voz para usar este comando!')
 
@@ -52,19 +52,22 @@ def comandos_musica(bot):
             atual[ctx.guild.id] = filas[ctx.guild.id].pop(0)  # Extrai o primeiro vídeo da fila e define como atual
 
             # Configurações do ffmpeg para reprodução de áudio
-            ffmpeg_options = {'options': '-vn -filter:a "volume=0.5"'}  # Separa apenas o áudio e reduz o volume
+            ffmpeg_options = {'options': '-vn -filter:a "volume=0.5" -latency 50 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'}
 
-            # Converte o áudio para opus e o armazena numa variável
-            source = discord.FFmpegOpusAudio(atual['url'], **ffmpeg_options)
+            # Converte o áudio para opus com as configurações estabelecidas e o armazena numa variável
+            source = discord.FFmpegOpusAudio(atual[ctx.guild.id]['url'], **ffmpeg_options)
 
             # Função chamada após a reprodução terminar
-            def proxima():
+            def proxima(error = None):
+                if error:
+                    print(f"Erro durante a reprodução: {error}")
+
                 if filas[ctx.guild.id]:  # Se ainda houver músicas na fila, toca a próxima
                     asyncio.run_coroutine_threadsafe(comecar(), bot.loop)
 
             # Toca o áudio no canal de voz
             ctx.voice_client.play(source, after=proxima)
-            await ctx.reply(f'Tocando agora: {atual["title"]}!')
+            await ctx.reply(f'Tocando agora: {atual[ctx.guild.id]["title"]}!')
 
         # Define as opções do yt-dlp para extração de informações do vídeo
         ydl_opts = {
@@ -72,16 +75,21 @@ def comandos_musica(bot):
             'noplaylist': True,
             'quiet': True,
             'no_warnings': True,
-            'default_search': 'auto',
+            'default_search': False,
             'source_address': '0.0.0.0'
         }
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             # Executa o yt-dlp em uma thread separada para não bloquear o loop de eventos e extrai as informações do vídeo
             info = await asyncio.to_thread(ydl.extract_info, url, download=False)
 
-            # Adiciona o url e o título do video na fila
-            nova = {'url': info['url'], 'title': info['title']}
-            filas[ctx.guild.id].append(nova)
+            # Verifica o acesso ao link do vídeo
+            if 'url' not in info:
+                await ctx.reply('Não foi possível acessar esse URL! Verifique sua mensagem ou a disponibilidade do link.')
+                return
+            else:
+                # Adiciona o url e o título do video na fila
+                nova = {'url': info['url'], 'title': info['title']}
+                filas[ctx.guild.id].append(nova)
 
             # Se não houver música tocando, inicia a reprodução. Se houver, adiciona o video à fila
             if ctx.voice_client.is_playing() and not ctx.voice_client.is_paused():
