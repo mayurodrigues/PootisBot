@@ -60,8 +60,9 @@ async def on_command_error(ctx, error):
             message = message(error)
         await ctx.reply(message.format(ctx=ctx))
     else:
-        await ctx.reply('Ocorreu um erro inesperado. Por favor, tente novamente mais tarde!')
-        logging.error(f'Erro não tratado: {error}', exc_info=True)
+        await ctx.reply('Ocorreu um erro inesperado! Por favor, tente novamente.')
+        print(error)
+        logging.error(f'{error}', exc_info=True)
 
 # Configura comandos simples e de música
 comandos_simples(bot)
