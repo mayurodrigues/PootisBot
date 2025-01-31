@@ -49,15 +49,37 @@ async def ping(ctx):
 async def pong(ctx):
     await ctx.send(f'Escreveu errado, minha gatinha!')
 
-async def texto_imagem(image, text, position):
+async def texto_imagem(image, text, position=None):
+    try:
+        font_path = "C:/Users/Gabriel/Desktop/PootisBot/PootisBot/fontes/TR Impact.ttf"
+        
+        font_size = int(image.width * 0.10)
+        
+        font = ImageFont.truetype(font_path, font_size)
+    except IOError:
+
+        font = ImageFont.load_default()
+        print("Fonte Impact não encontrada. Usando fonte padrão.")
+
     draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()
+
     text_color = (255, 255, 255)
+
+    if position is None:
+        text_bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        
+        position = (
+            (image.width - text_width) // 2,  
+            10  
+        )
+
     draw.text(position, text, font=font, fill=text_color)
+
     return image
 
-
-async def processa_imagem(attachment, text, position):
+async def processa_imagem(attachment, text, position=None):
     image_bytes = await attachment.read()
     image = Image.open(io.BytesIO(image_bytes))
 
@@ -68,18 +90,17 @@ async def processa_imagem(attachment, text, position):
             frame = await texto_imagem(frame, text, position)
             frames.append(frame)
 
-            gif_binary = io.BytesIO()
-            frames[0].save(
-                gif_binary,
-                format="GIF",
-                save_all=True,
-                append_images=frames[1:],
-                loop=0,  # Loop infinito
-                duration=image.info.get("duration", 100)
-            )
-
-            gif_binary.seek(0)
-            return gif_binary, "gif"
+        gif_binary = io.BytesIO()
+        frames[0].save(
+            gif_binary,
+            format="GIF",
+            save_all=True,
+            append_images=frames[1:],
+            loop=0,  
+            duration=image.info.get("duration", 100)
+        )
+        gif_binary.seek(0)
+        return gif_binary, "gif"
 
     else:
         image = await texto_imagem(image.convert("RGBA"), text, position)
@@ -88,7 +109,6 @@ async def processa_imagem(attachment, text, position):
         image_binary.seek(0)
         return image_binary, "png"
 
-# Comando: bot responde com a imagem e texto que o usuário enviou
 @bot.command()
 async def tt(ctx, *, text: str):
     if not ctx.message.attachments:
@@ -100,8 +120,7 @@ async def tt(ctx, *, text: str):
         await ctx.send("Por favor, anexe um arquivo válido!")
         return
 
-    text_position = (10, 10)
-    output, format = await processa_imagem(attachment, text, text_position)
+    output, format = await processa_imagem(attachment, text)
 
     try:
         if format == "gif":
@@ -110,6 +129,9 @@ async def tt(ctx, *, text: str):
             await ctx.send(file=discord.File(fp=output, filename='image_with_top_text.png'))
     finally:
         output.close()
+
+
+
 
 # Carrega as variáveis de ambiente do .env
 load_dotenv()
