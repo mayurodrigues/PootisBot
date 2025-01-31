@@ -1,5 +1,4 @@
 import discord
-from discord.ext import commands
 
 def comandos_simples(bot):
     @bot.command()
