@@ -9,3 +9,4 @@
 ### Decoradores do discord.py
 - @bot.event: define funções automáticas
 - @bot.command: define funções ativados através do chat
+- *Usar **@bot.command()** para decoradores de comando dentro de funções*

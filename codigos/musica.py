@@ -1,6 +1,7 @@
 import discord
 import yt_dlp as youtube_dl
 import asyncio
+from discord.ext import commands
 
 # Dicionário para armazenar as filas de reprodução de cada servidor
 filas = {}
@@ -99,7 +100,7 @@ def comandos_musica(bot):
         else:
             await ctx.reply('Não há nada para pausar!')
 
-    @bot.command()
+    @bot.command
     async def pular(ctx):
         """
         Pula para a próxima música na fila.
@@ -110,7 +111,7 @@ def comandos_musica(bot):
         else:
             await ctx.reply('Nenhuma música está sendo reproduzida no momento!')
 
-    @bot.command()
+    @bot.command
     async def agora(ctx):
         """
         Mostra qual música está tocando no momento.
@@ -121,7 +122,7 @@ def comandos_musica(bot):
                 embed = discord.Embed(
                     title='Tocando Agora:',
                     description=f'{musica["title"]}',
-                    color=discord.Color.blue()
+                    # color=discord.Color.blue()
                 )
                 await ctx.reply(embed=embed)
             else:
