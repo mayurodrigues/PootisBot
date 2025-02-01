@@ -1,8 +1,9 @@
 import discord
 import logging
 from discord.ext import commands
-from erros import MENSAGENS_DE_ERRO  # Importa o dicionário de erros no arquivo separado
-from simples import comandos_simples  # Importa comandos simples
+from erros import MENSAGENS_DE_ERRO
+from simples import comandos_simples
+from musica import comandos_musica
 
 # Configura o logging de erros
 logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -56,3 +57,4 @@ async def on_command_error(ctx, error):
 
 # Configura os comandos
 comandos_simples(bot)
+comandos_musica(bot)
