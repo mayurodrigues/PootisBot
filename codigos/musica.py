@@ -72,8 +72,8 @@ def comandos_musica(bot):
                         await ctx.voice_client.disconnect()
 
                 # Toca o áudio no canal de voz e anuncia
-                ctx.voice_client.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(proxima(ctx), bot.loop))
-                await ctx.reply(f'Tocando agora: {atual[ctx.guild.id]["title"]}!')
+                ctx.voice_client.play(player, after=lambda: asyncio.run_coroutine_threadsafe(proxima(ctx), bot.loop))
+                await ctx.reply(f'Tocando agora: {atual[ctx.guild.id]['title']}!')
 
             # Executa o yt-dlp em uma thread separada para não bloquear o loop de eventos e extrai as informações do vídeo
             info = await asyncio.to_thread(ydl.extract_info, url, download=False)
@@ -88,7 +88,7 @@ def comandos_musica(bot):
                 filas[ctx.guild.id].append(nova)
 
             if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
-                await ctx.reply(f'Adicionado à fila: {nova["title"]}!')
+                await ctx.reply(f'Adicionado à fila: {nova['title']}!')
             else:
                 await comecar()
 
@@ -107,7 +107,7 @@ def comandos_musica(bot):
     # Comando: pula para a próxima música
     @bot.command()
     async def pular(ctx):
-        if ctx.voice_client and ctx.voice_client.is_playing():
+        if ctx.voice_client and ctx.voice_client.is_playing() or ctx.voice_client.is_paused:
             ctx.voice_client.stop()  # Interrompe a reprodução atual, acionando a função "proxima"
             await ctx.reply('Música pulada!')
         else:
