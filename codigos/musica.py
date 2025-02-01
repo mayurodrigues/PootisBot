@@ -31,44 +31,6 @@ def comandos_musica(bot):
     # Comando: toca o áudio do url fornecido ou o adiciona à lista
     @bot.command()
     async def tocar(ctx, url: str):
-        # Verifica se o usuário está em um canal de voz
-        if not ctx.author.voice:
-            await ctx.reply('Você precisa estar em um canal de voz!')
-            return
-        # Entra no canal de voz caso o bot não esteja em um
-        if not ctx.voice_client:
-            await ctx.author.voice.channel.connect()
-        # Cria uma fila para o servidor caso ainda não exista
-        if ctx.guild.id not in filas:
-            filas[ctx.guild.id] = []
-
-        # Função chamada ao iniciar uma reprodução
-        async def comecar():
-            # Avisa quando a fila estiver vazia
-            if not filas[ctx.guild.id]:
-                await ctx.send('A fila acabou!')
-                return
-
-            atual[ctx.guild.id] = filas[ctx.guild.id].pop(0)  # Extrai o primeiro vídeo da fila e define como atual
-
-            # Configurações do ffmpeg para reprodução de áudio
-            ffmpeg_options = {'options': '-vn -filter:a "volume=0.5" -latency 50 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'}
-
-            # Converte o áudio para opus com as configurações estabelecidas e o armazena numa variável
-            source = discord.FFmpegOpusAudio(atual[ctx.guild.id]['url'], **ffmpeg_options)
-
-            # Função chamada após a reprodução terminar
-            def proxima(error = None):
-                if error:
-                    print(f"Erro durante a reprodução: {error}")
-
-                if filas[ctx.guild.id]:  # Se ainda houver músicas na fila, toca a próxima
-                    asyncio.run_coroutine_threadsafe(comecar(), bot.loop)
-
-            # Toca o áudio no canal de voz
-            ctx.voice_client.play(source, after=proxima)
-            await ctx.reply(f'Tocando agora: {atual[ctx.guild.id]["title"]}!')
-
         # Define as opções do yt-dlp para extração de informações do vídeo
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -78,7 +40,46 @@ def comandos_musica(bot):
             'default_search': False,
             'source_address': '0.0.0.0'
         }
+
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            # Verifica se o usuário está em um canal de voz
+            if not ctx.author.voice:
+                await ctx.reply('Você precisa estar em um canal de voz!')
+                return
+            # Entra no canal de voz caso o bot não esteja em um
+            if not ctx.voice_client:
+                await ctx.author.voice.channel.connect()
+            # Cria uma fila para o servidor caso ainda não exista
+            if ctx.guild.id not in filas:
+                filas[ctx.guild.id] = []
+
+            # Função chamada ao iniciar uma reprodução
+            async def comecar():
+                if filas[ctx.guild.id]:
+                    # Extrai o primeiro vídeo da fila e define como atual
+                    atual[ctx.guild.id] = filas[ctx.guild.id].pop(0)
+
+                    # Configurações do ffmpeg para reprodução de áudio
+                    ffmpeg_options = {'options': '-vn -filter:a "volume=0.5" -latency 50 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'}
+
+                    # Converte o áudio para opus com as configurações estabelecidas e armazena o URL numa variável
+                    player = discord.FFmpegOpusAudio(atual[ctx.guild.id]['url'], **ffmpeg_options)
+
+                    # Função que mantém o player funcionando e tocando o próximo áudio da fila
+                    async def proxima(ctx):
+                        if ctx.guild.id in filas and filas[ctx.guild.id]:
+                            await comecar()
+                        else:
+                            await ctx.reply('A fila está vazia!')
+                            await ctx.voice_client.disconnect()
+
+                    # Toca o áudio no canal de voz e anuncia
+                    ctx.voice_client.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(proxima(ctx), bot.loop))
+                    await ctx.reply(f'Tocando agora: {atual[ctx.guild.id]["title"]}!')
+                else:
+                    await ctx.reply('A fila está vazia!')
+                    await ctx.voice_client.disconnect()
+
             # Executa o yt-dlp em uma thread separada para não bloquear o loop de eventos e extrai as informações do vídeo
             info = await asyncio.to_thread(ydl.extract_info, url, download=False)
 
@@ -91,9 +92,8 @@ def comandos_musica(bot):
                 nova = {'url': info['url'], 'title': info['title']}
                 filas[ctx.guild.id].append(nova)
 
-            # Se não houver música tocando, inicia a reprodução. Se houver, adiciona o video à fila
-            if ctx.voice_client.is_playing() and not ctx.voice_client.is_paused():
-                await ctx.reply(f'Adicionado à fila: {nova["title"]}!')
+            if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
+                await ctx.reply(f'Adicionado à fila: {nova['title']}!')
             else:
                 await comecar()
 
@@ -115,8 +115,12 @@ def comandos_musica(bot):
     @bot.command()
     async def pular(ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
-            ctx.voice_client.stop()  # Se algo estiver tocando, a música atual, chamando a função "proxima"
-            await ctx.reply('Música pulada!')
+            if ctx.guild.id in filas and filas[ctx.guild.id]:
+                ctx.voice_client.stop()  # Se algo estiver tocando, interrompe a reprodução, acionando a função "proxima" para pular
+                await ctx.reply('Música pulada!')
+            else:
+                await ctx.reply('A fila está vazia! O bot será desconectado.')
+                await ctx.voice_client.disconnect()
         else:
             await ctx.reply('Nenhuma música está sendo reproduzida no momento!')
 
@@ -125,12 +129,8 @@ def comandos_musica(bot):
     async def agora(ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             # Se houver algo tocando, guarda as informações na variável abaixo, se não houver, deixa vazia
-            musica = filas[ctx.guild.id][0] if filas[ctx.guild.id] else None
-            # Se houver informações de video na variável, exibe no chat
-            if musica:
-                embed = discord.Embed(title='Tocando Agora:', description=f'{musica["title"]}',
-                )
-                await ctx.reply(embed=embed)
+            if ctx.guild.id in atual:
+                await ctx.reply(f'Tocando Agora: {atual[ctx.guild.id]['title']}')
             else:
                 await ctx.reply('Nenhuma música está sendo reproduzida no momento!')
         else:
@@ -139,7 +139,7 @@ def comandos_musica(bot):
     # Comando: exibe a fila de reprodução
     @bot.command()
     async def fila(ctx):
-        # Verifica se há uma fila nesse servidor e se a fila não está vazia, para criar um embed com as informações dela
+        # Verifica se há uma fila cheia nesse servidor e se a fila não está vazia, para criar um embed com as informações dela
         if ctx.guild.id in filas and filas[ctx.guild.id]:
             embed = discord.Embed(title='Fila de Reprodução:')
             # Adiciona os vídeos presentes na fila no embed com um índice numérico
@@ -168,3 +168,10 @@ def comandos_musica(bot):
             await ctx.reply('Não há fila para limpar!')
 
 
+    # Evento: apaga a fila se o bot for desconectado
+    @bot.event
+    async def on_voice_state_update(member, after):
+        if member == bot.user and after.channel is None:
+            if member.guild.id in filas:
+                del filas[member.guild.id]
+                del atual[member.guild.id]
