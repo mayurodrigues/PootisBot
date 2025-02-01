@@ -2,6 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+import textwrap
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 import io
 
@@ -62,6 +63,8 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
     text_color = (255, 255, 255)
     outline_color = (0,0,0)
     outline_width = 3
+    max_width = int(image.width * 0.80 / font.size * 2)
+    wrapped_text = textwrap.fill(top_text, bottom_text, width=max_width)
 
     if top_text:
         text_bbox = draw.textbbox((0, 0), top_text, font=font)
@@ -69,7 +72,8 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
         text_height = text_bbox[3] - text_bbox[1]
         position = ((image.width - text_width) // 2, 10)
         draw.text(
-            position, 
+            position,
+            wrapped_text, 
             top_text, 
             font=font, 
             fill=text_color, 
@@ -88,6 +92,7 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
             ) 
         draw.text(
             position, 
+            wrapped_text,
             bottom_text, 
             font=font, 
             fill=text_color,
