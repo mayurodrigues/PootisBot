@@ -1,36 +1,25 @@
 import discord
 
 def comandos_simples(bot):
+    # Comando: bot responde com uma saudação ao usuário
     @bot.command()
     async def ola(ctx):
-        """
-        Responde com uma saudação ao usuário.
-        """
         await ctx.reply(f'Fala, {ctx.author.name}!')
 
+    # Comando: bot responde com o ping do usuário
     @bot.command()
     async def ping(ctx):
-        """
-        Responde com o ping do bot.
-        """
-        await ctx.reply(f'Pong! Aqui está seu ping: {round(bot.latency * 1000)}ms!')
+        await ctx.reply(f'Pong! Aqui está seu ping: {round(bot.latency * 1000)}ms.')
 
+    # Comando: bot responde com uma brincadeira
     @bot.command()
     async def pong(ctx):
-        """
-        Responde com uma brincadeira ao comando "!pong".
-        """
-        await ctx.reply('Escreveu errado, minha gatinha!')
+        await ctx.reply(f'Escreveu errado, {ctx.user.name}!')
 
+    # Comando: bot exibe a foto de perfil do autor da mensagem ou de um usuário específico
     @bot.command()
     async def avatar(ctx, membro: discord.Member = None):
-        """
-        Responde com a foto de perfil do autor ou um usuário específico.
-        """
         membro = membro or ctx.author
-        embed = discord.Embed(
-            title=f'Avatar de {membro.name}',
-            # color=discord.Color.blue()
-        )
+        embed = discord.Embed(title=f'Avatar de {membro.name}')
         embed.set_image(url=membro.avatar.url)
         await ctx.reply(embed=embed)
