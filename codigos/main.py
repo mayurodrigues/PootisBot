@@ -63,18 +63,17 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
     text_color = (255, 255, 255)
     outline_color = (0,0,0)
     outline_width = 3
-    max_width = int(image.width * 0.80 / font.size * 2)
-    wrapped_text = textwrap.fill(top_text, bottom_text, width=max_width)
 
     if top_text:
         text_bbox = draw.textbbox((0, 0), top_text, font=font)
+        max_width = int(image.width * 0.80 / font.size * 2)
+        texto_quebrado = textwrap.fill(top_text, width=max_width)
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
         position = ((image.width - text_width) // 2, 10)
         draw.text(
             position,
-            wrapped_text, 
-            top_text, 
+            texto_quebrado,  
             font=font, 
             fill=text_color, 
             stroke_width=outline_width, 
@@ -84,6 +83,8 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
 
     if bottom_text:
         text_bbox = draw.textbbox((0, 0), bottom_text, font=font)
+        max_width = int(image.width * 0.80 / font.size * 2)
+        texto_quebrado = textwrap.fill(bottom_text, width=max_width)
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
         position = (
@@ -92,8 +93,7 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
             ) 
         draw.text(
             position, 
-            wrapped_text,
-            bottom_text, 
+            texto_quebrado,
             font=font, 
             fill=text_color,
             stroke_width=outline_width,
