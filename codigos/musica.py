@@ -1,4 +1,4 @@
-import discord
+import disnake
 import yt_dlp as youtube_dl
 import asyncio
 
@@ -61,7 +61,7 @@ def comandos_musica(bot):
                 ffmpeg_options = {'options': '-vn -filter:a "volume=0.5" -latency 50 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'}
 
                 # Converte o áudio para opus com as configurações estabelecidas e armazena o URL numa variável
-                player = discord.FFmpegOpusAudio(atual[ctx.guild.id]['url'], **ffmpeg_options)
+                player = disnake.FFmpegOpusAudio(atual[ctx.guild.id]['url'], **ffmpeg_options)
 
                 # Função que mantém o player funcionando e tocando o próximo áudio da fila
                 async def proxima(ctx):
@@ -125,7 +125,7 @@ def comandos_musica(bot):
     @bot.command()
     async def fila(ctx):
         if ctx.guild.id in filas and filas[ctx.guild.id]:
-            embed = discord.Embed(title='Fila de Reprodução:')
+            embed = disnake.Embed(title='Fila de Reprodução:')
             for numero, musica in enumerate(filas[ctx.guild.id], start=1):
                 embed.add_field(name=f'{numero}. {musica["title"]}', value='\u200b', inline=False)
             await ctx.reply(embed=embed)

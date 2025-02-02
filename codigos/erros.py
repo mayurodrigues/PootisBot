@@ -1,4 +1,4 @@
-from discord.ext import commands
+from disnake.ext import commands
 
 MENSAGENS_DE_ERRO = {
     commands.CommandNotFound: '{ctx.author.mention} Comando incorreto ou inexistente! Use "!ajuda" para uma lista dos comandos ou verifique sua mensagem.',

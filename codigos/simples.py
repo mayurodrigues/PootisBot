@@ -1,4 +1,4 @@
-import discord
+import disnake
 
 def comandos_simples(bot):
     # Comando: bot responde com uma saudação ao usuário
@@ -18,8 +18,8 @@ def comandos_simples(bot):
 
     # Comando: bot exibe a foto de perfil do autor da mensagem ou de um usuário específico
     @bot.command()
-    async def avatar(ctx, membro: discord.Member = None):
+    async def avatar(ctx, membro: disnake.Member = None):
         membro = membro or ctx.author
-        embed = discord.Embed(title=f'Avatar de {membro.name}')
+        embed = disnake.Embed(title=f'Avatar de {membro.name}')
         embed.set_image(url=membro.avatar.url)
         await ctx.reply(embed=embed)

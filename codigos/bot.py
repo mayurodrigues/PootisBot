@@ -1,15 +1,16 @@
-import discord
+import disnake
 import logging
-from discord.ext import commands
+from disnake.ext import commands
 from erros import MENSAGENS_DE_ERRO
 from simples import comandos_simples
 from musica import comandos_musica
+from pesquisa import comandos_pesquisa
 
 # Configura o logging de erros
-logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='bot.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configura as permissões do bot
-INTENTS = discord.Intents.default()
+INTENTS = disnake.Intents.default()
 INTENTS.messages = True
 INTENTS.message_content = True
 INTENTS.members = True
@@ -58,3 +59,4 @@ async def on_command_error(ctx, error):
 # Configura os comandos
 comandos_simples(bot)
 comandos_musica(bot)
+comandos_pesquisa(bot)
