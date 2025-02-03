@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import textwrap
+from moviepy.editor import TextClip, CompositeVideoClip, VideoFileClip
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 import io
 
@@ -65,12 +66,13 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
     outline_width = 3
 
     if top_text:
-        text_bbox = draw.textbbox((0, 0), top_text, font=font)
-        max_width = int(image.width * 0.80 / font.size * 2)
+        max_width = int(image.width * 0.98 / font.size * 2)
         texto_quebrado = textwrap.fill(top_text, width=max_width)
+        text_bbox = draw.textbbox((0, 0), texto_quebrado, font=font)
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
         position = ((image.width - text_width) // 2, 10)
+
         draw.text(
             position,
             texto_quebrado,  
@@ -82,14 +84,15 @@ async def texto_imagem(image, top_text=None, bottom_text=None):
 
 
     if bottom_text:
-        text_bbox = draw.textbbox((0, 0), bottom_text, font=font)
-        max_width = int(image.width * 0.80 / font.size * 2)
+        max_width = int(image.width * 0.98 / font.size * 2)
         texto_quebrado = textwrap.fill(bottom_text, width=max_width)
+        text_bbox = draw.textbbox((0, 0), texto_quebrado, font=font)
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
+        position = ((image.width - text_width) // 2, 10)
         position = (
             (image.width - text_width) // 2, 
-            image.height - text_height - 20
+            image.height - text_height - 30
             ) 
         draw.text(
             position, 
@@ -133,18 +136,85 @@ async def processa_imagem(attachment, top_text=None, bottom_text=None):
         image_binary.seek(0)
         return image_binary, "png"
 
+async def processa_video(attachment, top_text=None, bottom_text=None):
+
+    video_bytes = await attachment.read()
+    temp_video_path = "temp_video.mp4"
+    with open(temp_video_path, "wb") as f:
+        f.write(video_bytes)
+
+    video = VideoFileClip(temp_video_path)
+    
+    if top_text:
+        txt_clip_top = TextClip(
+            top_text,
+            fontsize = 50,
+            color = "white",
+            font = "Impact",
+            stroke_color = "black",
+            stroke_width = 2,
+        ).set_position(("center", 10)).set_duration(video.duration)
+
+    if bottom_text:
+        txt_clip_bottom = TextClip(
+            bottom_text,
+            fontsize = 50,
+            color = "white",
+            font = "Impact",
+            stroke_color = "black",
+            stroke_width = 2,
+        ).set_position(("center", video.size[1] - 100)).set_duration(video.duration)
+
+    if top_text and bottom_text:
+        final_clip = CompositeVideoClip([video, txt_clip_top, txt_clip_bottom])
+    elif top_text:
+        final_clip = CompositeVideoClip([video, txt_clip_top])
+    elif bottom_text:
+        final_clip = CompositeVideoClip([video, txt_clip_bottom])
+    else:
+        final_clip = video
+
+    output_video_path = "output_video.mp4"
+    final_clip.write_videofile(output_video_path, codec="libx264")
+
+    with open(output_video_path, "rb") as f:
+        video_binary = io.BytesIO(f.read())
+
+    os.remove(temp_video_path)
+    os.remove(output_video_path)
+
+    return video_binary, "mp4"
+
+
 @bot.command()
 async def meme(ctx, *, text: str):
-    if not ctx.message.attachments:
-        await ctx.send("Anexe um arquivo!")
-        return
 
-    attachment = ctx.message.attachments[0]
-    if not attachment.filename.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'bmp')):
-        await ctx.send("Por favor, anexe um arquivo válido!")
-        return
+    if ctx.message.reference:
+        try:
+            referenced_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
 
+            if referenced_message.attachments:
+                attachment = referenced_message.attachments[0]
 
+            else:
+                await ctx.send("A mensagem marcada não contém um anexo")
+                return
+
+        except discord.NotFound:
+            await ctx.send("Mensagem não encontrada")
+            return
+
+        except discord.Forbidden:
+            await ctx.send("Não tenho permissão para acessar a mensagem")
+            return
+    else:
+
+        if not ctx.message.attachments:
+            await ctx.send("Anexe um arquivo ou marque uma mensagem que contenha uma imagem!")
+            return
+        attachment = ctx.message.attachments[0]
+
+        
     top_text = None
     bottom_text = None
     if ',' in text:
@@ -155,13 +225,24 @@ async def meme(ctx, *, text: str):
     else:
         top_text = text.replace("tt", "").strip()
 
-    output, format = await processa_imagem(attachment, top_text, bottom_text)
+
+    if attachment.filename.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'bmp')):
+        output, format = await processa_imagem(attachment, top_text, bottom_text)
+    elif attachment.filename.lower().endswith(('.mp4')):
+        output, format = await processa_video(attachment, top_text, bottom_text)
+    else:
+        await ctx.send("Por favor, anexe um arquivo válido!")
+        return
 
     try:
         if format == "gif":
             await ctx.send(file=discord.File(fp=output, filename='image_with_text.gif'))
+        elif format == "mp4":
+            await ctx.send(file=discord.File(fp=output, filename='video_with_text.mp4'))
         else:
             await ctx.send(file=discord.File(fp=output, filename='image_with_text.png'))
+
+
     finally:
         output.close()
 
