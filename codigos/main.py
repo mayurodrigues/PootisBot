@@ -6,6 +6,7 @@ import textwrap
 from moviepy.editor import TextClip, CompositeVideoClip, VideoFileClip
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 import io
+import subprocess
 
 # Configura as permissões do bot
 INTENTS = discord.Intents.default()
