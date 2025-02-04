@@ -15,7 +15,7 @@ def comandos_pesquisa(bot):
         termo = ' '.join(args)  # Define tudo escrito após o comando como parte do termo a ser pesquisado
         LOGO = disnake.File('material/google_logo.png', filename='google_logo.png')  # Variável de arquivo para a logo na pasta (material)
         embed = disnake.Embed(title=f'Resultados para “{termo}”', colour=0x4285F4)
-        embed.set_footer(text='Google Search', icon_url='attachment://google_logo.png')  # Configura o rodapé
+        embed.set_footer(text='Google Search', icon_file=LOGO)  # Configura o rodapé
 
         # Faz a pesquisa normal (sem searchType='image') para obter sites
         pesquisa = SIMPLES.cse().list(q=termo, cx=ID_SIMPLES, num=3, hl='pt-BR', gl='br', key=API_GOOGLE).execute()
