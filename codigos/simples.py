@@ -1,4 +1,5 @@
 import disnake
+from random import randint
 
 def comandos_simples(bot):
     # Comando: bot responde com uma saudação ao usuário
@@ -14,7 +15,7 @@ def comandos_simples(bot):
     # Comando: bot responde com uma brincadeira
     @bot.command()
     async def pong(ctx):
-        await ctx.reply(f'Escreveu errado, {ctx.user.name}!')
+        await ctx.send(f'{ctx.author.mention} tentou se pingar!')
 
     # Comando: bot exibe a foto de perfil do autor da mensagem ou de um usuário específico
     @bot.command()
