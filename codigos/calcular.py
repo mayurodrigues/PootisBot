@@ -8,11 +8,9 @@ def comandos_calcular(bot):
         ',': '.',
     }
 
-    # Comando: bot resolve um cálculo
     @bot.command()
     async def calcular(ctx, *args):
         operacao = ' '.join(args)
-        # Substituir símbolos inválidos pelos corretos
         for errado, certo in substituicoes.items():
             operacao = operacao.replace(errado, certo)
 
