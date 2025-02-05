@@ -26,7 +26,8 @@ def comandos_pesquisa(bot):
             pesquisa_imagem = SIMPLES.cse().list(q=termo, cx=ID_SIMPLES, num=1, hl='pt-BR', gl='br', searchType='image', key=API_GOOGLE).execute()
             if 'items' in pesquisa_imagem and pesquisa_imagem['items']:
                 imagem = pesquisa_imagem['items'][0].get('link')  # URL da imagem
-            else: imagem = None
+            else:
+                imagem = None
         else:
             await ctx.send(f'Não encontrei nenhum resultado para "{termo}"!')
             return
