@@ -1,7 +1,7 @@
 from disnake.ext import commands
 
 MENSAGENS_DE_ERRO = {
-    commands.CommandNotFound: '{ctx.author.mention} Comando incorreto ou inexistente! Use "!ajuda" para uma lista dos comandos ou verifique sua mensagem.',
+    commands.CommandNotFound: 'Comando incorreto ou inexistente! Use "!ajuda" para uma lista dos comandos ou verifique sua mensagem.',
     commands.BadArgument: 'Um argumento inválido foi utilizado na execução desse comando! Use "!ajuda" para entender a sintaxe ou verifique sua mensagem.',
     commands.MissingRequiredArgument: 'Faltam argumentos necessários para a execução desse comando! Use "!ajuda" para entender a sintaxe ou verifique sua mensagem.',
     commands.TooManyArguments: 'Você forneceu argumentos demais! Use "!ajuda" para entender a sintaxe ou verifique sua mensagem.',
