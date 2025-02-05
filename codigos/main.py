@@ -145,11 +145,13 @@ async def processa_video(attachment, top_text=None, bottom_text=None):
         f.write(video_bytes)
 
     video = VideoFileClip(temp_video_path)
+    font_size = int(video.size[1] * 0.10)
     
     if top_text:
+        wrapped_top_text = textwrap.fill(top_text, width=30)
         txt_clip_top = TextClip(
-            top_text,
-            fontsize = 50,
+            wrapped_top_text,
+            fontsize = font_size,
             color = "white",
             font = "Impact",
             stroke_color = "black",
@@ -157,14 +159,15 @@ async def processa_video(attachment, top_text=None, bottom_text=None):
         ).set_position(("center", 10)).set_duration(video.duration)
 
     if bottom_text:
+        wrapped_bottom_text = textwrap.fill(bottom_text, width=30)        
         txt_clip_bottom = TextClip(
-            bottom_text,
-            fontsize = 50,
+            wrapped_bottom_text,
+            fontsize = font_size,
             color = "white",
             font = "Impact",
             stroke_color = "black",
             stroke_width = 2,
-        ).set_position(("center", video.size[1] - 100)).set_duration(video.duration)
+        ).set_position(("center", video.size[1] * 0.80)).set_duration(video.duration)
 
     if top_text and bottom_text:
         final_clip = CompositeVideoClip([video, txt_clip_top, txt_clip_bottom])
