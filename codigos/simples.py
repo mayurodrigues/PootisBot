@@ -1,5 +1,4 @@
 import disnake
-from random import randint
 
 def comandos_simples(bot):
     # Comando: bot responde com uma saudação ao usuário
