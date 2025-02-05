@@ -1,6 +1,6 @@
 ### Propriedades do ctx (contexto)
 * **ctx.author:** retorna o usuário que executou o comando;
-* * _id, name, display_name, avatar, created_at, joined_at, roles…_
+* * _id, name, mention, display_name, avatar, created_at, joined_at, roles…_
 * **ctx.channel:** retorna o canal onde o comando foi executado;
 * * _id, name, guild…_
 * **ctx.guild:** retorna o servidor onde o comando foi executado;
