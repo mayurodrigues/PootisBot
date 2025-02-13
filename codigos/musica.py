@@ -14,7 +14,7 @@ def comandos_musica(bot):
                 await ctx.voice_client.move_to(ctx.author.voice.channel)  # Move para o canal do usuário, se já estiver em outro
             else:
                 await ctx.author.voice.channel.connect()  # Conecta ao canal de voz do usuário
-            await ctx.reply(f'Entrei no canal de voz "{ctx.author.voice.channel.name}"!')
+            await ctx.reply(f'Entrei no canal de voz “{ctx.author.voice.channel.name}”!')
         else:
             await ctx.reply('Você precisa estar em um canal de voz para usar este comando!')
 
@@ -73,7 +73,7 @@ def comandos_musica(bot):
 
                 # Toca o áudio no canal de voz e anuncia
                 ctx.voice_client.play(player, after=lambda: asyncio.run_coroutine_threadsafe(proxima(ctx), bot.loop))
-                await ctx.reply(f'Tocando agora: {atual[ctx.guild.id]['title']}!')
+                await ctx.reply(f'**Tocando agora:** {atual[ctx.guild.id]['title']}!')
 
             # Executa o yt-dlp em uma thread separada para não bloquear o loop de eventos e extrai as informações do vídeo
             info = await asyncio.to_thread(ydl.extract_info, url, download=False)
@@ -88,7 +88,7 @@ def comandos_musica(bot):
                 filas[ctx.guild.id].append(nova)
 
             if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
-                await ctx.reply(f'Adicionado à fila: {nova['title']}!')
+                await ctx.reply(f'**Adicionado à fila:** {nova['title']}!')
             else:
                 await comecar()
 
@@ -117,7 +117,7 @@ def comandos_musica(bot):
     @bot.command()
     async def agora(ctx):
         if ctx.guild.id in atual:
-            await ctx.reply(f'Tocando Agora: {atual[ctx.guild.id]["title"]}')
+            await ctx.reply(f'**Tocando Agora:** {atual[ctx.guild.id]["title"]}')
         else:
             await ctx.reply('Nenhuma música está sendo reproduzida no momento!')
 
