@@ -6,22 +6,30 @@ def comandos_dado(bot):
     @bot.command()
     async def dado(ctx):
         resultado = randint(1, 6)
+        embed = disnake.Embed(title='O resultado é…', color=0xffffff)
+        gif = disnake.File('material/rolagem_dados.gif', filename='rolagem_dados.gif')
         match resultado:
             case 1:
-                dado = disnake.File('material/dado1.png', filename='dado1.png')
-                await ctx.reply(file=dado)
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Um (1)!'
+                await ctx.reply(embed=embed)
             case 2:
-                dado = disnake.File('material/dado2.png', filename='dado2.png')
-                await ctx.reply(file=dado)
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Dois (2)!'
+                await ctx.reply(embed=embed)
             case 3:
-                dado = disnake.File('material/dado3.png', filename='dado3.png')
-                await ctx.reply(file=dado)
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Três (3)!'
+                await ctx.reply(embed=embed)
             case 4:
-                dado = disnake.File('material/dado4.png', filename='dado4.png')
-                await ctx.reply(file=dado)
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Quatro (4)!'
+                await ctx.reply(embed=embed)
             case 5:
-                dado = disnake.File('material/dado5.png', filename='dado5.png')
-                await ctx.reply(file=dado)
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Cinco (5)!'
+                await ctx.reply(embed=embed)
             case 6:
-                dado = disnake.File('material/dado6.png', filename='dado6.png')
-                await ctx.reply(file=dado)
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Seis (6)!'
+                await ctx.reply(embed=embed)
