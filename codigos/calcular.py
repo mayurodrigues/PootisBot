@@ -24,7 +24,7 @@ def comandos_calcular(bot):
                 await ctx.reply(f'Resultado com decimal: {resultado.evalf()}\n'
                                 f'Resultado com radical: {resultado}')
         elif operacao.lower() == 'o amor de mayu pela rosa':
-            await ctx.reply('É imensurável...')
+            await ctx.reply('É imensurável…')
         else:
             await ctx.reply('Essa não é uma operação válida!')
 
