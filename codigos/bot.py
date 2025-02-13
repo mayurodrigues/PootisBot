@@ -9,7 +9,7 @@ from calcular import comandos_calcular
 from dado import comandos_dado
 
 # Configura o logging de erros
-logging.basicConfig(filename='bot.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configura as permissões do bot
 INTENTS = disnake.Intents.default()
