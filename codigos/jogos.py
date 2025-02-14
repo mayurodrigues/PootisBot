@@ -1,7 +1,7 @@
-from random import randint
 import disnake
+from random import choice, randint
 
-def comandos_dado(bot):
+def comandos_jogos(bot):
     # Comando: lança um dado de seis lados
     @bot.command()
     async def dado(ctx):
@@ -32,4 +32,20 @@ def comandos_dado(bot):
             case 6:
                 embed.set_thumbnail(file=gif)
                 embed.description = 'Seis (6)!'
+                await ctx.reply(embed=embed)
+
+    # Comando: lança uma moeda para um cara ou coroa
+    @bot.command()
+    async def moeda(ctx):
+        resultado = choice(['cara', 'coroa'])
+        embed = disnake.Embed(title='O resultado é…', color=0x8B8000)
+        gif = disnake.File('material/giro_moeda.gif', filename='giro_moeda.gif')
+        match resultado:
+            case 'cara':
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Cara!'
+                await ctx.reply(embed=embed)
+            case 'coroa':
+                embed.set_thumbnail(file=gif)
+                embed.description = 'Coroa!'
                 await ctx.reply(embed=embed)
