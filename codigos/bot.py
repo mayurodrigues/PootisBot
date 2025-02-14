@@ -6,7 +6,7 @@ from simples import comandos_simples
 from musica import comandos_musica
 from pesquisa import comandos_pesquisa
 from calcular import comandos_calcular
-from dado import comandos_dado
+from jogos import comandos_jogos
 
 # Configura o logging de erros
 logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -63,4 +63,4 @@ comandos_simples(bot)
 comandos_calcular(bot)
 comandos_musica(bot)
 comandos_pesquisa(bot)
-comandos_dado(bot)
+comandos_jogos(bot)
