@@ -14,7 +14,7 @@ def comandos_pesquisa(bot):
     async def pesquisar(ctx, *args):
         termo = ' '.join(args)  # Define tudo escrito após o comando como parte do termo a ser pesquisado
         LOGO = disnake.File('material/google_logo.png', filename='google_logo.png')  # Variável de arquivo para a logo na pasta (material)
-        embed = disnake.Embed(title=f'Resultados para “{termo}”:', color=0x4285F4) # Cor em HEX
+        embed = disnake.Embed(title=f'Resultados para “{termo}”', color=0x4285F4) # Cor em HEX
         embed.set_footer(text='Google Search', icon_file=LOGO)  # Configura o rodapé
 
         # Faz a pesquisa normal (sem searchType='image') para obter sites
@@ -42,4 +42,4 @@ def comandos_pesquisa(bot):
 
         # Adiciona a imagem como thumbnail, se encontrada
         if imagem: embed.set_thumbnail(url=imagem)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
