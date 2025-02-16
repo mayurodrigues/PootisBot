@@ -17,6 +17,7 @@ INTENTS.messages = True
 INTENTS.message_content = True
 INTENTS.members = True
 INTENTS.guilds = True
+INTENTS.presences = True
 
 # Cria uma instância do bot
 bot = commands.Bot(command_prefix='!', intents=INTENTS)
