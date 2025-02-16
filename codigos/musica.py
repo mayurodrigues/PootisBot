@@ -1,4 +1,5 @@
 import disnake
+from disnake.ext import commands
 import yt_dlp as youtube_dl
 import asyncio
 
@@ -8,6 +9,7 @@ atual = {}  # Armazena o que está sendo tocado no momento em cada servidor
 def comandos_musica(bot):
     # Comando: entra no canal de voz do usuário
     @bot.command()
+    @commands.guild_only()
     async def entrar(ctx):
         if ctx.author.voice:
             if ctx.voice_client:
@@ -20,6 +22,7 @@ def comandos_musica(bot):
 
     # Comando: sai do canal de voz
     @bot.command()
+    @commands.guild_only()
     async def sair(ctx):
         if ctx.voice_client:
             await ctx.voice_client.disconnect()
@@ -29,6 +32,7 @@ def comandos_musica(bot):
 
     # Comando: toca o áudio do url fornecido ou o adiciona à lista
     @bot.command()
+    @commands.guild_only()
     async def tocar(ctx, url: str):
         # Define as opções do yt-dlp para extração de informações do vídeo
         ydl_opts = {
@@ -94,6 +98,7 @@ def comandos_musica(bot):
 
     # Comando: pausa ou retoma a reprodução
     @bot.command()
+    @commands.guild_only()
     async def pausar(ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.pause()  # Pausa a reprodução
@@ -106,6 +111,7 @@ def comandos_musica(bot):
 
     # Comando: pula para a próxima música
     @bot.command()
+    @commands.guild_only()
     async def pular(ctx):
         if ctx.voice_client and ctx.voice_client.is_playing() or ctx.voice_client.is_paused:
             ctx.voice_client.stop()  # Interrompe a reprodução atual, acionando a função "proxima"
@@ -115,6 +121,7 @@ def comandos_musica(bot):
 
     # Comando: mostra o que está tocando no momento
     @bot.command()
+    @commands.guild_only()
     async def agora(ctx):
         if ctx.guild.id in atual:
             await ctx.reply(f'**Tocando Agora:** {atual[ctx.guild.id]["title"]}')
@@ -123,6 +130,7 @@ def comandos_musica(bot):
 
     # Comando: exibe a fila de reprodução
     @bot.command()
+    @commands.guild_only()
     async def fila(ctx):
         if ctx.guild.id in filas and filas[ctx.guild.id]:
             embed = disnake.Embed(title='Fila de Reprodução:')
@@ -134,6 +142,7 @@ def comandos_musica(bot):
 
     # Remove um vídeo da fila
     @bot.command()
+    @commands.guild_only()
     async def remover(ctx, posicao: int):
         if ctx.guild.id in filas and 1 <= posicao <= len(filas[ctx.guild.id]):
             musica_removida = filas[ctx.guild.id].pop(posicao - 1)
@@ -143,6 +152,7 @@ def comandos_musica(bot):
 
     # Comando: limpa a fila de reprodução
     @bot.command()
+    @commands.guild_only()
     async def limpar(ctx):
         if ctx.guild.id in filas:
             filas[ctx.guild.id].clear()
@@ -152,6 +162,7 @@ def comandos_musica(bot):
 
     # Evento: apaga a fila se o bot for desconectado
     @bot.event
+    @commands.guild_only()
     async def on_voice_state_update(member, after):
         if member == bot.user and after.channel is None:
             if member.guild.id in filas:
