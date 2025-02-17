@@ -9,11 +9,13 @@ def comandos_simples(bot):
         embed = disnake.Embed(color=0xCD7F32)
         embed.add_field(name='Comandos Gerais:',
                         value=('**!ping:** responde o ping (latência) entre o usuário e o bot.\n'
-                               '**!avatar:** exibe a foto de perfil do autor da mensagem ou de um usuário marcado.\n'
+                               '**!avatar:** envia a foto de perfil do autor da mensagem ou do usuário marcado.\n'
                                '**!calcular:** envia o resultado de uma operação matemática especificada.\n'
-                               '**!pesquisar:** envia os três primeiros resultados de uma pesquisa no Google pelo termo especificado, com títulos, links e pequenas descrições.\n'
-                               '**!dado:** lança um dado padrão ou um especificado (d4, d6, d8, d10, d12 e d20).\n'
-                               '**!moeda:** responde um resultado aleatório de “Cara ou Coroa”.'), inline=False)
+                               '**!userinfo:** exibe informações sobre o autor da mensagem ou do usuário marcado\n'
+                               '**!serverinfo:** exibe informações sobre o servidor.'
+                               '**!pesquisar:** envia resultados de uma pesquisa no Google pelo termo especificado.\n'
+                               '**!dado:** lança um dado padrão ou especificado (d4, d6, d8, d10, d12 e d20).\n'
+                               '**!moeda:** responde um resultado de “Cara ou Coroa”.'), inline=False)
         embed.add_field(name='Comandos de Música:',
                         value=('**!entrar:** entra no canal de voz do autor da mensagem.\n'
                                '**!sair:** sai do canal de voz em que está.\n'
@@ -23,7 +25,7 @@ def comandos_simples(bot):
                                '**!agora:** responde as informações do áudio em reprodução.\n'
                                '**!fila:** exibe os áudios presentes na lista de reprodução.\n'
                                '**!remover:** remove o áudio presente na posição específicada da fila.\n'
-                               '**!limpar:** remove todos os áudios presentes na fila de reprodução.'), inline=False)
+                               '**!limpar:** remove os áudios presentes na fila de reprodução.'), inline=False)
         embed.set_footer(text='Pootis Bot v1.0 • Desenvolvido por Lisa e Mayu',icon_file=disnake.File('material/bot.jpg', filename='bot.jpg'))
         await ctx.reply(embed=embed)
 
@@ -85,6 +87,22 @@ def comandos_simples(bot):
                                  f'**Entrou no servidor em:** {dia_entrada} de {mes_entrada} de {ano_entrada}')
             await ctx.send(embed=embed)
 
-    # @bot.command()
-    # @commands.guild_only()
-    # async def serverinfo(ctx):
+    # Comando: bot exibe informações a respeito do servidor em que está
+    @bot.command()
+    @commands.guild_only()
+    async def serverinfo(ctx):
+        criacao = f'{ctx.guild.created_at}'
+        meses = {1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+                 5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+                 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
+        data_criacao = datetime.strptime(criacao[:10], "%Y-%m-%d")
+        dia_criacao = data_criacao.day
+        mes_criacao = meses[data_criacao.month]
+        ano_criacao = data_criacao.year
+
+        embed = disnake.Embed(title = f'Servidor {ctx.guild.name}')
+        embed.set_thumbnail(url=ctx.guild.icon.url)
+        embed.description = (f'**Criador:** {ctx.guild.owner}\n'
+                             f'**Criado em:** {dia_criacao} de {mes_criacao} de {ano_criacao}\n'
+                             f'**Número de membros:** {ctx.guild.member_count}')
+        await ctx.reply(embed=embed)
