@@ -2,11 +2,7 @@ from sympy import sympify
 from re import fullmatch
 
 def comandos_calcular(bot):
-    substituicoes = {
-        '×': '*',
-        '÷': '/',
-        ',': '.',
-    }
+    substituicoes = {'×': '*', '÷': '/', ',': '.', '[': '(', ']': ')', '{': '(', '}': ')'}
 
     @bot.command()
     async def calcular(ctx, *args):
