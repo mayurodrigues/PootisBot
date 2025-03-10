@@ -402,6 +402,7 @@ async def music(ctx, youtube_url: str):
         os.remove(final_path)
         print("Arquivos temporários removidos.")
 
+#TESTE ENVIA
 
 
 
