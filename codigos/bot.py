@@ -7,6 +7,7 @@ from musica import comandos_musica
 from pesquisa import comandos_pesquisa
 from calcular import comandos_calcular
 from jogos import comandos_jogos
+from lastfm import comandos_lastfm
 
 # Configura o logging de erros
 logging.basicConfig(filename='bot.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -65,3 +66,4 @@ comandos_calcular(bot)
 comandos_musica(bot)
 comandos_pesquisa(bot)
 comandos_jogos(bot)
+comandos_lastfm(bot)
