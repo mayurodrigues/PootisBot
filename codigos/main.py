@@ -1,9 +1,5 @@
 import os
-from dotenv import load_dotenv
 from bot import bot  # Importa o bot do arquivo bot.py
-
-# Carrega as variáveis de ambiente do arquivo .env
-load_dotenv()
 
 TOKEN = os.getenv('TOKEN')
 
